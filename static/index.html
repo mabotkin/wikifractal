@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>WikiFractal</title>
+        <link rel="stylesheet" type="text/css" href="main.css">
+        <link href='https://fonts.googleapis.com/css?family=Open+Sans+Condensed:300' rel='stylesheet' type='text/css'> <!--Open Sans Condensed font-->
+    </head>
+    <body onload="setCenter()">
+        <div id="wrapper">
+            <div id="header">
+                <div id="dark"></div>
+                <div id="words">
+                    <h1 id="titlez">WikiFractal</h1><!-- <br><span>For when you want to search, but don't want to search.</span></h1> -->
+                </div>
+            </div>
+            <div id="content">
+                <div class="bubble" id="bub">
+                    <h1 id="prompt" class="prompt">What would you <br> like to explore?</h1>
+                    <!-- <img src="https://www.google.com/imgres?imgurl=http://www.wussu.com/fractals/images/wd950112.gif&imgrefurl=http://www.wussu.com/fractals/&h=768&w=1024&tbnid=BdVDMh-9Y247NM:&docid=4T3IgqgPddL1YM&ei=SkS3VtvNL8r0-AGys7bgAg&tbm=isch&ved=0ahUKEwjbmrju3uXKAhVKOj4KHbKZDSwQMwgiKAUwBQ">
+                    -->
+                        <input type="text" id="keyword" autofocus>
+                </div>
+            </div>
+            <div id="footer">
+                <div>Made with love by French Fry, Chicken Wang, Broccolee, and Tilted.<br>HackTJ 2016</div>
+            </div>
+        </div> 
+    </body>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+    <script>
+	//for placeholder
+	var inp = document.getElementById("keyword");
+	var examples = ["Abraham Lincoln", "Paris", "King Lear", "Abbey Road", "Thanksgiving", "Pythagorean Theorem", "Google", "Mark Twain", "Louis XVI", "Martin Luther", "Confucious", "The Bible",
+	"Maroon 5", "Don't Stop Believing", "Brett Favre", "Wayne Gretzky", "Hydrogen", "Gravity", "Isaac Newton", "Empire State Building", "Neil Armstrong", "Photosynthesis", "Python 2"];
+	inp.placeholder = ("ex. " + examples[parseInt(Math.random()*examples.length)]);
+    var center = "center"; 
+    var current = ""; 
+        document.getElementById('keyword').onkeydown = function(e){
+            if(e.keyCode == 13)
+            {
+                if(document.getElementById("keyword").value.trim() !=""){
+                    document.getElementById("keyword").value
+                    $("#titlez").fadeOut("slow"); 
+                    $("#footer").fadeOut("slow"); 
+                    center = document.getElementById("keyword").value;
+                    getData("bub", document.getElementById("keyword").value);
+                }
+            }
+        
+        };
+        function setCenter()
+        {
+            //document.body.style.zoom = "20%";
+            var bubble = document.getElementById("bub");    
+            var windowWidth = parseInt($("body").css('width')); 
+            var windowHeight = parseInt($("body").css('height')); 
+            var size = windowWidth / 5; 
+            bubble.style.width = size + "px"; 
+            bubble.style.height = size + "px"; 
+            bubble.style.left = windowWidth / 2 - size / 2  + "px";
+            bubble.style.top = windowHeight / 2 - size / 2 + "px"; 
+            window.scrollTo(windowWidth / 2, document.body.offsetHeight * 2);
+        }
+        function getData(p, search){
+            var parentName = event.target.id;
+            if(p!=null)
+                parentName = p; 
+            $("#" + parentName).click(function(event){
+                event.stopPropagation();
+                scroll(); 
+            });
+            if (parentName.length > 6)
+                return; 
+            if(search == null){
+                search = document.getElementById(parentName).getElementsByTagName("a")[0].innerHTML; 
+            }
+            var xmlhttp = new XMLHttpRequest();
+            var data; 
+            xmlhttp.onreadystatechange = function() 
+            {
+            	if(xmlhttp.readyState == 4 && xmlhttp.status == 200)
+            	{
+            	    var tmp = xmlhttp.responseText;
+            	    var data = JSON.parse(tmp);
+            	    addChildren(parentName, data); 
+            	}
+            };
+            xmlhttp.open("GET","/wikiquery?searchterm=" + search,false);
+            xmlhttp.send();
+        }
+        function addChildren(p, data){ 
+            var keys = []
+            var parentName = p; 
+            console.log(data); 
+            for(var thing in data){
+                if(thing == "PLACEHOLDERTEXT"){
+                    if(p == "bub"){
+                        console.log("placeholder"); 
+                        bubble = document.getElementById("bub"); 
+                        bubble.innerHTML = "";
+                        var link = document.createElement("a"); 
+                        link.href = data[thing];
+						link.target = "_blank";
+                        link.id = "middleLink";
+                        link.appendChild(document.createTextNode(center)); 
+                        var iframe = document.createElement('iframe');
+                        iframe.id = "iframe";
+                        iframe.className = "bubble"; 
+                        console.log(data[thing].replace("http", "https")); 
+                        iframe.setAttribute("src", data[thing].replace("http", "https"));
+                        
+                        bubble.appendChild(iframe); 
+                        bubble.appendChild(link);
+                        //bubble.style.border = "10px solid #2c3e50"; 
+                        iframe.style.visibility = "false"; 
+                        $("#iframe").fadeIn("slow");
+                    }
+                }
+                else
+                    keys.push(thing); 
+            }
+            
+            var size = parseInt($("#"+parentName+"").css('width'));
+            var bubble = document.getElementById(parentName);
+            console.log(parentName); 
+            var num = parentName.slice(-1);
+            for(var i=0; i< keys.length; i++)
+            {
+                var child = document.createElement("div"); 
+                child.className = "bubble"; 
+                var childName = parentName + "_" + i;
+                child.id = childName; 
+                if((i+3)%6+"" != num)
+                        bubble.appendChild(child);
+                child.style.width = "0px"; 
+                child.style.height = "0px"; 
+                $("#"+childName).animate({
+                        width: size * .4 + "px", 
+                        height: size * .4 + "px" 
+                    });
+                child.style.zIndex = "-1";
+                var x = Math.cos(Math.PI*i/3) * size + size * .3; //(1-.9)/2
+                var y = Math.sin(Math.PI*i/3) * size + size * .3;
+                child.style.zIndex = -10; 
+                child.style.fontSize = size/12+ "px"; 
+                child.style.top = size * .3 + "px"; 
+                child.style.left = size * .3 + "px"; 
+                child.style.opacity = "0"; 
+                $("#"+childName).animate({
+                    top:  y + "px",
+                    left: x + "px", 
+                    opacity: 1.0
+                    }, 1000, function(){
+                        child.style.zIndex = parentName.length;
+                    });
+                if(keys.length > 0)
+                {
+                    var link = document.createElement("a"); 
+                    link.href = data[keys[i]];
+					link.target = "_blank";
+                    link.appendChild(document.createTextNode(keys[i])); 
+                    child.appendChild(link);
+
+                }
+                $("#" + child.id).click(function(event){
+                    event.stopPropagation();
+                    scroll(); 
+                    getData(); 
+                });
+            }
+        }
+        function scroll()
+        {
+           var parentName = event.target.id; 
+            console.log("scroll " + parentName); 
+            if(current == parentName)
+                return; 
+            // if(parentName == "bub"){
+            //     $("html, body").animate({ zoom: "100%",
+            //         scrollTop: "0px",
+            //         scrollLeft: "0px"}, 500);
+            //     return;
+            // }
+            // current = parentName; 
+            // var i = parentName.slice(-1); 
+            // var size = $("#" + parentName).width(); 
+            // var zoom = (parentName.length - 3) / 2 + 1; 
+            // console.log(zoom); 
+            // var scrollLeft = ($("#" + parentName).offset().left - size / 2) * zoom;
+            // var scrollTop = ($("#" + parentName).offset().top - size / 2) * zoom;
+            // $("html, body").animate({ zoom: zoom, 
+            //     scrollTop: scrollTop + "px",
+            //     scrollLeft: scrollLeft + "px"}, 500);
+        }
+    </script>
+</html>
