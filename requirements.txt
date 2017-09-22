@@ -1,0 +1,4 @@
+Flask==0.12.2
+lxml==3.5.0
+requests==2.18.1
+gunicorn==19.7.1
