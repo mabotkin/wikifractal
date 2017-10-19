@@ -21,6 +21,8 @@ def send_stuff(path):
 @app.route("/wikiquery",methods=['GET'])
 def process():
     searchterm = request.args['searchterm']
+    if not os.path.exists("static/log.txt"):
+        file("static/log.txt","w").close()
     filesize = os.stat("static/log.txt").st_size
     if(filesize<1048576):
         fout = open("static/log.txt","a")
