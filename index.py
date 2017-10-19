@@ -22,7 +22,7 @@ def send_stuff(path):
 def process():
     searchterm = request.args['searchterm']
     if not os.path.exists("static/log.txt"):
-        file("static/log.txt","w").close()
+        open("static/log.txt","w").close()
     filesize = os.stat("static/log.txt").st_size
     if(filesize<1048576):
         fout = open("static/log.txt","a")
